@@ -1,1 +1,0 @@
-python3 tracker.py torrent1.torrent

@@ -3,17 +3,20 @@ import sys
 import os
 import hashlib
 import time
+
 class Torrent:
     def __init__(self,torrent_path):
         self.torrent_path = torrent_path
-
+        self.decode_bencoded_file()
+        self.initialize_files()
+        self.request_peers_parameters()
     def decode_bencoded_file(self):
         with open(self.torrent_path, 'rb') as file:
             contents = bdecode(file)
         self.contents = contents
         self.announce_list = []
         if "announce-list" in self.contents:
-            self.announce_list = self.contents["announce-list"]
+            self.announce_list = [x[0] for x in self.contents["announce-list"]]
         else:
             self.announce_list = [self.contents["announce"]]
         self.comment = self.contents["comment"]
@@ -50,14 +53,11 @@ class Torrent:
     def request_peers_parameters(self):
         bencoded_info = bencode(self.contents["info"])
         self.info_hash = hashlib.sha1(bencoded_info).digest()
-        self.peer_id = hashlib.sha1('-AZ2200-6wfG2wk6wWLc'.encode('utf-8')).digest()
+        self.peer_id = self.generate_peer_id()
         self.left = self.total_length
-    
+        self.port = 6889
 
-    
+    def generate_peer_id(self):
+        seed = str(time.time())
+        return hashlib.sha1(seed.encode('utf-8')).digest()
 
-path = sys.argv[1]
-torrent = Torrent(path)
-torrent.decode_bencoded_file()
-torrent.initialize_files()
-print(torrent.announce_list)
