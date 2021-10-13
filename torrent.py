@@ -13,6 +13,10 @@ class Torrent:
     def decode_bencoded_file(self):
         with open(self.torrent_path, 'rb') as file:
             contents = bdecode(file)
+        with open('torrent.txt', 'w') as file:
+            for key, value in contents.items():
+                file.write(f"{str(key)} : {str(value)}")
+                file.write("\n\n")
         self.contents = contents
         self.announce_list = []
         if "announce-list" in self.contents:
@@ -42,9 +46,11 @@ class Torrent:
                 os.mkdir(root_folder_name, 0o777)
             
             for sub_folder in self.files:
-                path_file = os.path.join(root_folder_name, *sub_folder["path"])
-                if not os.path.exists(os.path.dirname(path_file)):
-                    os.make_(os.path.dirname(path_file))
+                path_file = ''
+                if len(sub_folder["path"]) > 1:
+                    path_file = os.path.join(root_folder_name, sub_folder["path"][0])
+                    if not os.path.exists(os.path.dirname(path_file)):
+                        os.makedirs(os.path.dirname(path_file))
                 total_length += int(sub_folder["length"])
         else:
             total_length = int(self.files[0]["length"])

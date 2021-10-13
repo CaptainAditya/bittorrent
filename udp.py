@@ -1,5 +1,6 @@
 import struct, random
 from sys import int_info
+import socket
 class udpTrackerConnecting:
     def __init__(self):
         self.connection_id = struct.pack('>Q', 0x41727101980)
@@ -26,7 +27,7 @@ class udpTrackerAnnouncing:
         self.event = struct.pack('>I', 0)
         self.ip = struct.pack('>I', 0)
         self.key = struct.pack('>I', 0)
-        self.num_want = struct.pack('>i', -1)
+        self.num_want = struct.pack('>I', 30)
         self.port = struct.pack('>H', port)
     def byteStringAnnounce(self):
         return (self.connection_id + self.action + self.transaction_id + self.info_hash + self.peer_id 
@@ -40,10 +41,13 @@ class udpTrackerAnnouncing:
         seeders = struct.unpack('>I', response[16 : 20])
         info = list([str(x) for x in response[20:]])
         ip_port = []
-        i = 0
-        while i < len(info) - len(info) % 6:
-            ip = ".".join(info[i : i + 4])
-            port = int(info[i + 4]) * 256 + int(info[i + 5])
+        for i in range(int(len(info) // 6)):
+            start = i * 6
+            end = start + 6
+            ip = ".".join(info[start:(end - 2)])
+            raw_port = info[(end - 2):end]
+
+            port = int(raw_port[1]) + int(raw_port[0]) * 256
+
             ip_port.append((ip, port))
-            i += 6
         return ip_port
