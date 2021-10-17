@@ -10,9 +10,10 @@ class udpTrackerConnecting:
     def bytestringForConnecting(self):
         return self.connection_id + self.action + self.transaction_id
     def parse_response(self, data):
-        format_to_unpack = 'IIQ'
-        tracker_connection_response = struct.unpack(format_to_unpack, data)
-        self.server_connection_id = tracker_connection_response[2]
+        self.action, = struct.unpack('>I', data[:4])
+        self.trans_id, = struct.unpack('>I', data[4:8])
+        self.server_connection_id, = struct.unpack('>Q', data[8:])
+
 class udpTrackerAnnouncing:
     def __init__(self, conn_id, info_hash, peer_id, left, port):
         self.connection_id = struct.pack('>Q', conn_id)
@@ -28,7 +29,7 @@ class udpTrackerAnnouncing:
         self.ip = struct.pack('>I', 0)
         self.key = struct.pack('>I', 0)
         self.num_want = struct.pack('>I', 30)
-        self.port = struct.pack('>H', port)
+        self.port = struct.pack('>H', 8000)
     def byteStringAnnounce(self):
         return (self.connection_id + self.action + self.transaction_id + self.info_hash + self.peer_id 
                 + self.downloaded + self.left + self.uploaded + self.event + self.ip + self.key + self.num_want + self.port)
@@ -41,7 +42,7 @@ class udpTrackerAnnouncing:
         seeders = struct.unpack('>I', response[16 : 20])
         info = list([str(x) for x in response[20:]])
         ip_port = []
-        for i in range(int(len(info) // 6)):
+        for i in range(int(len(info) / 6)):
             start = i * 6
             end = start + 6
             ip = ".".join(info[start:(end - 2)])
