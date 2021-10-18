@@ -44,7 +44,6 @@ class Torrent:
             root_folder_name = self.name
             if not os.path.exists(root_folder_name):
                 os.mkdir(root_folder_name, 0o777)
-            
             for sub_folder in self.files:
                 path_file = ''
                 if len(sub_folder["path"]) > 1:
