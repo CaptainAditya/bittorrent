@@ -1,6 +1,7 @@
 import socket
 import struct
 from ipaddress import ip_address, IPv4Address
+import bitstring
 def validIPAddress(IP: str) -> str:
     try:
         return "IPv4" if type(ip_address(IP)) is IPv4Address else "IPv6"
@@ -8,8 +9,10 @@ def validIPAddress(IP: str) -> str:
         return "Invalid"
 
 class Peer:
-    def __init__(self, ip_port):
+    def __init__(self, ip_port, number_of_pieces):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)          
+        self.bit_field = bitstring.BitArray(number_of_pieces)
         self.ip_port = ip_port
         self.am_choking = 1
         self.am_interested = 0
@@ -26,7 +29,6 @@ class Peer:
             print("Success")
             return self.sock
         except Exception as e:
-            print(e)
             return None
 
 class Handshake():

@@ -34,7 +34,7 @@ class Tracker:
                     'left': self.torrent_obj.total_length, 
                     'event': 'started'}
         try:
-            answer_tracker = requests.get(tracker_url, params=payload, timeout=10)
+            answer_tracker = requests.get(tracker_url, params=payload, timeout=5)
             response = bdecode(answer_tracker.content)
             print(response)
             self.peers[tracker_url] = []
@@ -81,7 +81,7 @@ class Tracker:
                 sock.sendto(tracker_connection.bytestringForConnecting(), (url_parse.hostname, url_parse.port, 0 , 0))
             except:
                 return
-        sock.settimeout(7) 
+        sock.settimeout(4) 
         try:
             data, addr = sock.recvfrom(131072)
         except socket.timeout:
@@ -100,28 +100,26 @@ class Tracker:
                 sock.sendto(tracker_announce.byteStringAnnounce(), (url_parse.hostname, url_parse.port, 0, 0))
             except:
                 return
-        sock.settimeout(7) 
-        completeMessagge = b'' 
+        sock.settimeout(4) 
+        completeMessage = b'' 
 
         while True:
             try:
                 data,addr = sock.recvfrom(4096)
                 if len(data) <= 0:
                     break
-                completeMessagge += data
+                completeMessage += data
             except socket.error as e:
                 err = e.args[0]
                 if err != errno.EAGAIN or err != errno.EWOULDBLOCK:
                     pass
                 break
             except Exception:
-                
                 break
-        if len(completeMessagge) <= 0:
+        if len(completeMessage) <= 0:
             return
-        ip_ports = tracker_announce.parse_response(completeMessagge)
+        ip_ports = tracker_announce.parse_response(completeMessage)
         # self.peers[tracker_url] = ip_ports
         for x in ip_ports:
             self.peers.add(x)
-
         print(ip_ports)
