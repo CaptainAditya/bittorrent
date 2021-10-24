@@ -10,8 +10,9 @@ class Piece:
         self.piece_index = piece_index
         self.piece_size = piece_size
         self.piece_sha1 = piece_sha1
-        self.number_of_blocks = ceil(self.piece_size // BLOCK_SIZE)
+        self.number_of_blocks = ceil(self.piece_size / BLOCK_SIZE)
         self.blocks: list[Block] = []
+        self.init_blocks()
     def init_blocks(self):
         if self.number_of_blocks > 1:
             for i in range(self.number_of_blocks):

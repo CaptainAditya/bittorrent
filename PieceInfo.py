@@ -4,7 +4,7 @@ from BlockandPiece import Piece
 class PieceInfo:
     def __init__(self, torrent):
         self.torrent = torrent
-        self.number_of_pieces = ceil(torrent.total_length // torrent.piece_length)
+        self.number_of_pieces = ceil(torrent.total_length / torrent.piece_length)
         self.pieces = []
         self.pieces_SHA1 = []
         self.getSHA1()
