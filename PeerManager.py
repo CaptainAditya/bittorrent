@@ -55,6 +55,7 @@ class PeerManager:
                     message_ID = sock.recv(1)
                     message_ID_u, = struct.unpack(">B", message_ID)
                     if message_ID == 0:
+                        print(f"{peer.ip_port} choked")
                         peer.peer_chocking = 1
                     elif message_ID == 1:
                         peer.peer_chocking = 0
@@ -88,19 +89,23 @@ class PeerManager:
             except Exception:
                 break
 
-    def read_piece_response(self, sock, length):
+    def read_piece_response(self, sock : socket.socket, length):
         res = b''
-        sock.settimeout(5)
         res = sock.recv(length)
         l = len(res)
-        socket.timeout(5)
+        sock.settimeout(2)
         if l < length:
-            while len(res) != length:
+            while len(res) <= length:
                 try:
                     req = length - len(res)
+                    if req == 0:
+                        return res
+                    print(f"Required : {req}")
                     data = sock.recv(req)
                     res += data
-                except Exception as e:
+                except socket.timeout:
+                    return None
+                except:
                     return None
         return res
     def MultiThreadedConnection(self, peer):

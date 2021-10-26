@@ -25,4 +25,9 @@ class PieceInfo:
             end = start + 20
             self.pieces_SHA1.append(self.torrent.pieces[start : end])
 
-          
+    def merge_blocks(self, index):
+        res = b""
+        for block in self.pieces[index].blocks:
+            res += block.data
+        return res
+

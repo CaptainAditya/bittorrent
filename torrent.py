@@ -31,7 +31,7 @@ class Torrent:
             self.multipleFiles = True
             self.files = self.contents["info"]["files"]
         else:
-            file_dictionary = {"length" : self.contents["info"]["length"]}
+            file_dictionary = {"length" : self.contents["info"]["length"], "path" : ""}
             self.files = [file_dictionary]
         self.name = self.contents["info"]["name"]
         self.piece_length = self.contents["info"]["piece length"]
@@ -44,13 +44,19 @@ class Torrent:
             root_folder_name = self.name
             if not os.path.exists(root_folder_name):
                 os.mkdir(root_folder_name, 0o777)
-            for sub_folder in self.files:
-                path_file = ''
-                if len(sub_folder["path"]) > 1:
-                    path_file = os.path.join(root_folder_name, sub_folder["path"][0])
-                    if not os.path.exists(os.path.dirname(path_file)):
-                        os.makedirs(os.path.dirname(path_file))
-                total_length += int(sub_folder["length"])
+            for file in self.files:
+                path_file = os.path.join(root_folder_name, *file["path"])
+
+                if not os.path.exists(os.path.dirname(path_file)):
+                    os.makedirs(os.path.dirname(path_file))
+
+                total_length += file["length"]
+                # path_file = ''
+                # if len(sub_folder["path"]) > 1:
+                #     path_file = os.path.join(root_folder_name, sub_folder["path"][0])
+                #     if not os.path.exists(os.path.dirname(path_file)):
+                #         os.makedirs(os.path.dirname(path_file))
+                # total_length += int(sub_folder["length"])
         else:
             total_length = int(self.files[0]["length"])
         self.total_length = total_length
