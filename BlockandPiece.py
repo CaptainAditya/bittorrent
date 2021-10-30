@@ -4,7 +4,7 @@ class Block:
     def __init__(self, block_size = BLOCK_SIZE, raw_bytes = b""):
         self.block_size = block_size
         self.data = raw_bytes
-
+        self.status = 0
 class Piece:
     def __init__(self, piece_index, piece_size, piece_sha1):
         self.piece_index = piece_index
@@ -22,6 +22,17 @@ class Piece:
         else:
             self.blocks.append(Block(self.piece_size))
     
-                
+    def is_complete(self):
+        for block in self.blocks:
+            if block.status == 0:
+                return False
+        return True        
 
-        
+    def get_empty_block(self):
+        if self.is_complete():
+            return None
+
+        for block_index, block in enumerate(self.blocks):
+            if block.status == 0:
+                return block_index, block
+        return None, None

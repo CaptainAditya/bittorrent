@@ -21,9 +21,6 @@ class Tracker:
                 self.http_request(url)
             if "udp" in url:
                 self.udp_request(url)
-        print("HAHA")
-        print(self.peers)  
-
     def http_request(self, tracker_url):
         url_parse = urlparse(tracker_url)
         payload = {'info_hash': self.torrent_obj.info_hash, 
@@ -81,7 +78,7 @@ class Tracker:
                 sock.sendto(tracker_connection.bytestringForConnecting(), (url_parse.hostname, url_parse.port, 0 , 0))
             except:
                 return
-        sock.settimeout(4) 
+        sock.settimeout(10) 
         try:
             data, addr = sock.recvfrom(131072)
         except socket.timeout:
@@ -100,7 +97,7 @@ class Tracker:
                 sock.sendto(tracker_announce.byteStringAnnounce(), (url_parse.hostname, url_parse.port, 0, 0))
             except:
                 return
-        sock.settimeout(4) 
+        sock.settimeout(10) 
         completeMessage = b'' 
 
         while True:

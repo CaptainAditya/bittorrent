@@ -31,3 +31,8 @@ class PieceInfo:
             res += block.data
         return res
 
+    def all_piece_complete(self):
+        for piece in self.pieces:
+            if piece.is_complete() == False:
+                return False
+        return True

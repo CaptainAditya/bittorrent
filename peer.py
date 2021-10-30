@@ -29,7 +29,8 @@ class Peer:
             print("Success")
             return self.sock
         except Exception as e:
-            return None
+            return None        
+
 
 class Handshake():
     def __init__(self, peer_id, info_hash):
@@ -47,7 +48,7 @@ class Handshake():
                             self.peer_id)
     def getHandshakeBytes(self):
         return self.handshake
-    
+
 
     
 

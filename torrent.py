@@ -51,12 +51,6 @@ class Torrent:
                     os.makedirs(os.path.dirname(path_file))
 
                 total_length += file["length"]
-                # path_file = ''
-                # if len(sub_folder["path"]) > 1:
-                #     path_file = os.path.join(root_folder_name, sub_folder["path"][0])
-                #     if not os.path.exists(os.path.dirname(path_file)):
-                #         os.makedirs(os.path.dirname(path_file))
-                # total_length += int(sub_folder["length"])
         else:
             total_length = int(self.files[0]["length"])
         self.total_length = total_length
