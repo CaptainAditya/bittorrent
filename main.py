@@ -1,3 +1,4 @@
+from socket import socket
 import struct
 from Messages import pieceMessage
 from torrent import Torrent
@@ -5,12 +6,15 @@ from tracker import Tracker
 from PeerManager import PeerManager
 from BlockandPiece import BLOCK_SIZE, Piece
 import bitstring
+import socket
 import random
 import hashlib
 import threading
 import time
-tracker = Tracker("torrents/torrent1.torrent")
-# tracker.peers = {('75.185.30.133', 48392), ('79.131.4.255', 42340), ('90.190.137.53', 60075), ('180.191.195.57', 6881), ('79.119.253.220', 38972), ('38.7.250.73', 7746), ('121.98.62.85', 31264), ('45.238.115.45', 36202), ('0.0.0.0', 65535), ('95.160.156.160', 39867), ('111.0.64.42', 40048), ('104.221.97.24', 48392), ('46.6.2.112', 64856), ('91.208.206.239', 50000), ('37.187.89.189', 55013), ('31.0.121.141', 29499), ('212.239.175.11', 21552), ('79.118.13.93', 51413), ('86.10.5.251', 19098), ('42.2.47.9', 38404), ('167.40.17.252', 8000), ('187.246.171.5', 53593), ('81.182.185.18', 12627), ('31.0.33.27', 43619), ('243.35.113.201', 51413), ('88.15.7.101', 17165), ('81.33.249.181', 35308), ('41.222.248.111', 16909), ('66.115.142.186', 31698), ('49.228.105.91', 8999), ('32.1.8.248', 5677), ('106.203.254.46', 6881), ('0.0.13.221', 48392), ('188.83.68.14', 0), ('138.117.178.225', 60024), ('83.51.44.250', 9080), ('212.251.172.15', 59389), ('37.19.198.94', 62414), ('37.133.240.208', 62786), ('49.145.128.113', 20338), ('108.191.191.222', 10213), ('68.235.43.86', 39207), ('45.86.56.67', 8999), ('181.231.42.196', 51413), ('102.129.145.168', 51911), ('110.50.85.144', 21336), ('109.166.137.125', 25028), ('243.122.67.198', 48392), ('136.158.49.75', 6881), ('77.139.198.161', 47203), ('115.134.109.189', 34445), ('112.205.224.224', 49425), ('105.244.26.117', 30754), ('176.205.102.125', 8000), ('0.0.0.0', 0), ('186.96.210.98', 36048), ('31.0.0.0', 0)}
+import errno
+
+tracker = Tracker("torrents/singleFile.torrent")
+# tracker.peers = {('31.217.15.226', 62734), ('64.188.185.126', 8999), ('41.212.58.184', 35368), ('0.0.0.0', 0), ('199.88.191.59', 40810), ('199.187.210.214', 44278), ('0.0.0.0', 65535), ('134.2.214.194', 8000), ('87.5.69.217', 53650), ('105.244.106.4', 11691), ('222.173.52.178', 51413), ('176.205.102.125', 8000), ('32.1.8.248', 5677), ('64.188.185.126', 0), ('105.163.210.73', 19794), ('162.216.47.200', 40810), ('41.204.60.46', 57235), ('196.64.134.88', 14781), ('185.192.70.17', 46774), ('94.140.9.181', 18194), ('135.148.100.25', 52963)}
 tracker.get_peer_list()
 p = PeerManager(tracker)
 p.connect()
@@ -59,7 +63,7 @@ print(tracker.peers)
 #     i += 1
 # # f.close()
 # #write into_file
-threads = []
+# threads = []
 while p.piece_manager.all_piece_complete() == False:
     for piece in p.piece_manager.pieces:
         piece_index = piece.piece_index 
@@ -74,12 +78,35 @@ while p.piece_manager.all_piece_complete() == False:
             peer.sock.send(request_block)
         except:
             continue        
-        t = threading.Thread(target=PeerManager._read_from_socket, args = (peer.sock, piece, block_index, block_obj,))
-        t.start()
-        threads.append(t)
-        time.sleep(5)
-for process in threads:
-    process.join()
+        # t = threading.Thread(target=PeerManager._read_from_socket, args = (peer.sock, piece, block_index, block_obj,))
+        # t.start()
+        # threads.append(t)
+        # def _read_from_socket(sock:socket.socket, piece:Piece, block_index, block_obj : Block):
+        data = b''
+        peer.sock.settimeout(10)
+        while True:
+            try:
+                buff = peer.sock.recv(4096)
+                if len(buff) <= 0:
+                    break
+                data += buff
+            except socket.error as e:
+                err = e.args[0]
+                if err != errno.EAGAIN or err != errno.EWOULDBLOCK:
+                    # logging.debug("Wrong errno {}".format(err))
+                    pass
+                break
+            except Exception as e:
+                # logging.exception("Recv failed")
+                break
+        if len(data) <= 0:
+            continue
+        
+        piece.blocks[block_index].status = 1
+        piece.blocks[block_index].data = data
+        print(piece.piece_index, block_index, len(data))
+# for process in threads:
+#     process.join()
                 
 
 print("Torrent Completed")

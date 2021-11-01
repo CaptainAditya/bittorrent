@@ -86,9 +86,9 @@ class PeerManager:
             except Exception:
                 break
     @staticmethod
-    def _read_from_socket(sock, piece:Piece, block_index, block_obj : Block):
+    def _read_from_socket(sock:socket.socket, piece:Piece, block_index, block_obj : Block):
         data = b''
-
+        sock.settimeout(10)
         while True:
             try:
                 buff = sock.recv(4096)
@@ -103,7 +103,7 @@ class PeerManager:
                     # logging.debug("Wrong errno {}".format(err))
                     pass
                 break
-            except Exception:
+            except Exception as e:
                 # logging.exception("Recv failed")
                 break
         if len(data) <= 0:
