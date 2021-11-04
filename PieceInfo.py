@@ -1,6 +1,7 @@
 from torrent import Torrent
 from math import ceil
 from BlockandPiece import Piece
+import random
 class PieceInfo:
     def __init__(self, torrent):
         self.torrent = torrent
@@ -36,3 +37,10 @@ class PieceInfo:
             if piece.is_complete() == False:
                 return False
         return True
+    
+    def getRandomPiece(self):
+        piece = None
+        while True:
+            piece : Piece = random.choice(self.pieces)
+            if piece.is_complete() == False:
+                return piece
