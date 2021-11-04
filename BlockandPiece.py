@@ -34,5 +34,4 @@ class Piece:
 
         for block_index, block in enumerate(self.blocks):
             if block.status == 0:
-                return block_index, block
-        return None, None
+                return block_index

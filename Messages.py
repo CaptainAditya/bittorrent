@@ -85,6 +85,8 @@ class Bitfield:
         length, message_ID = struct.unpack(">IB", response[:5])
         bitfield_length = length - 1
         if message_ID == cls.message_ID:
+            print(f"Length of raw_bytes {len(response[5 : 5 + bitfield_length])}")
+            print(response)
             raw_bytes, = struct.unpack(f">{bitfield_length}s", response[5 : 5 + bitfield_length])
             bitfield = BitArray(bytes = bytes(raw_bytes))
             print("Bitfield")
@@ -112,8 +114,10 @@ class pieceMessage:
     @classmethod
     def parse_response(cls, response):
         block_length = len(response) - 13
-        length, message_ID, piece_index, block_offset , block= struct.unpack(f"IBII{block_length}s", response[:13 + block_length])
+        print(f"PIECE data {len(response)}")
+        length, message_ID, piece_index, block_offset , block= struct.unpack(f">IBII{block_length}s", response)
         if cls.message_ID == message_ID:
+            print("GOTVHAAA")
             return (piece_index, block_length, block_offset, block)      
         else:
             return -1
