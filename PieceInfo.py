@@ -2,6 +2,8 @@ from torrent import Torrent
 from math import ceil
 from BlockandPiece import Piece
 import random
+from colorama import Fore, Back, Style
+
 class PieceInfo:
     def __init__(self, torrent):
         self.torrent = torrent
@@ -10,7 +12,9 @@ class PieceInfo:
         self.pieces_SHA1 = []
         self.getSHA1()
         self.generate_piece()
-
+        self.totalBlocks = self.getTotalBlocks()
+        self.files = self._load_files()
+        self.write_simantaneously_into_file()
     def generate_piece(self):
         last_piece = self.number_of_pieces - 1
         for i in range(self.number_of_pieces):
@@ -44,3 +48,78 @@ class PieceInfo:
             piece : Piece = random.choice(self.pieces)
             if piece.is_complete() == False:
                 return piece
+    def _load_files(self):
+        files = []
+        piece_offset = 0
+        piece_size_used = 0
+
+        for f in self.torrent.files:
+            current_size_file = f["length"]
+            file_offset = 0
+
+            while current_size_file > 0:
+                id_piece = int(piece_offset / self.torrent.piece_length)
+                piece_size = self.pieces[id_piece].piece_size - piece_size_used
+
+                if current_size_file - piece_size < 0:
+                    file = {"length": current_size_file,
+                            "idPiece": id_piece,
+                            "fileOffset": file_offset,
+                            "pieceOffset": piece_size_used,
+                            "path": f["path"]
+                            }
+                    piece_offset += current_size_file
+                    file_offset += current_size_file
+                    piece_size_used += current_size_file
+                    current_size_file = 0
+
+                else:
+                    current_size_file -= piece_size
+                    file = {"length": piece_size,
+                            "idPiece": id_piece,
+                            "fileOffset": file_offset,
+                            "pieceOffset": piece_size_used,
+                            "path": f["path"]
+                            }
+                    piece_offset += piece_size
+                    file_offset += piece_size
+                    piece_size_used = 0
+
+                files.append(file)
+        return files
+    def write_simantaneously_into_file(self):
+        master_i = 0
+        n = len(self.files)
+        
+        while master_i < n:
+            piece_index = self.files[master_i]['idPiece']
+            length = self.files[master_i]['length']
+            file_offset = self.files[master_i]['fileOffset']
+            piece_offset = self.files[master_i]['pieceOffset']
+            path = self.files[master_i]['path']
+
+            if self.pieces[piece_index].is_complete == False:
+                continue
+            path_to_file = "//".join(path)
+            path_to_file = self.torrent.name + "//" + path_to_file
+            try:
+                f = open(path_to_file, 'r+b')  # Already existing file
+            except IOError:
+                f = open(path_to_file, 'wb')  # New file
+            data_to_be_written = self.merge_blocks(piece_index)[piece_offset : piece_offset + length]
+            f.seek(file_offset)
+            f.write(data_to_be_written)
+            master_i += 1
+    def getTotalBlocks(self):
+        total = 0
+        for piece in self.pieces:
+            total += len(piece.blocks)
+        return total
+    def percentage(self):
+        blocksDone = 0
+        for piece in self.pieces:
+            for block in piece.blocks:
+                if block.status == 1 : blocksDone += 1
+        percentage = (blocksDone/self.totalBlocks) * 100
+        inString = "PROGRESS REPORT : " + str(percentage) + "% Downloaded"
+        print (Back.GREEN + inString)
