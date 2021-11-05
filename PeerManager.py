@@ -93,8 +93,7 @@ class PeerManager:
                     block_index = block_offset // BLOCK_SIZE
                     self.piece_manager.pieces[piece_index].blocks[block_index].data = block
                     self.piece_manager.pieces[piece_index].blocks[block_index].status = 1        
-                    print(piece_index, block_index, len(raw_bytes)) 
-                    print(f"{peer.ip_port} piece with {piece_index} {block_index} {len(raw_bytes)}")
+                    print(f"RECIEVED PIECE FROM {peer.ip_port} WITH PIECE INDEX : {piece_index} BLOCK INDEX : {block_index}")
                
             # except socket.error as e:
             #     err = e.args[0]
