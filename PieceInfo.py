@@ -2,11 +2,14 @@ from torrent import Torrent
 from math import ceil
 from BlockandPiece import Piece
 import random
+import colorama
 from colorama import Fore, Back, Style
+import heapq as hq
+colorama.init(autoreset=True)#auto resets your settings after every output
 
 class PieceInfo:
     def __init__(self, torrent):
-        self.torrent = torrent
+        self.torrent:Torrent = torrent
         self.number_of_pieces = ceil(torrent.total_length / torrent.piece_length)
         self.pieces = []
         self.pieces_SHA1 = []
@@ -14,7 +17,6 @@ class PieceInfo:
         self.generate_piece()
         self.totalBlocks = self.getTotalBlocks()
         self.files = self._load_files()
-        self.write_simantaneously_into_file()
     def generate_piece(self):
         last_piece = self.number_of_pieces - 1
         for i in range(self.number_of_pieces):
@@ -87,29 +89,39 @@ class PieceInfo:
 
                 files.append(file)
         return files
-    def write_simantaneously_into_file(self):
+    def write_into_file(self):
         master_i = 0
         n = len(self.files)
-        
-        while master_i < n:
-            piece_index = self.files[master_i]['idPiece']
-            length = self.files[master_i]['length']
-            file_offset = self.files[master_i]['fileOffset']
-            piece_offset = self.files[master_i]['pieceOffset']
-            path = self.files[master_i]['path']
+        if self.torrent.multipleFiles:
+            while master_i < n:
+                piece_index = self.files[master_i]['idPiece']
+                length = self.files[master_i]['length']
+                file_offset = self.files[master_i]['fileOffset']
+                piece_offset = self.files[master_i]['pieceOffset']
+                path = self.files[master_i]['path']
 
-            if self.pieces[piece_index].is_complete == False:
-                continue
-            path_to_file = "//".join(path)
-            path_to_file = self.torrent.name + "//" + path_to_file
-            try:
-                f = open(path_to_file, 'r+b')  # Already existing file
-            except IOError:
-                f = open(path_to_file, 'wb')  # New file
-            data_to_be_written = self.merge_blocks(piece_index)[piece_offset : piece_offset + length]
-            f.seek(file_offset)
-            f.write(data_to_be_written)
-            master_i += 1
+                if self.pieces[piece_index].is_complete == False:
+                    continue
+                path_to_file = "//".join(path)
+                path_to_file = self.torrent.name + "//" + path_to_file
+                try:
+                    f = open(path_to_file, 'r+b')  # Already existing file
+                except IOError:
+                    f = open(path_to_file, 'wb')  # New file
+                data_to_be_written = self.merge_blocks(piece_index)[piece_offset : piece_offset + length]
+                f.seek(file_offset)
+                f.write(data_to_be_written)
+                master_i += 1
+        else:
+            n = self.number_of_pieces
+            f = open(self.torrent.name, 'wb')  # New file
+            while master_i < n:
+                if self.pieces[master_i].is_complete == False:
+                    continue
+                data_to_be_written = self.merge_blocks(master_i)
+                f.write(data_to_be_written)
+                master_i += 1
+
     def getTotalBlocks(self):
         total = 0
         for piece in self.pieces:
@@ -123,3 +135,18 @@ class PieceInfo:
         percentage = (blocksDone/self.totalBlocks) * 100
         inString = "PROGRESS REPORT : " + str(percentage) + "% Downloaded"
         print (Back.GREEN + inString)
+
+    def getRarestPieceMinHeap(self, connectedPeers):
+        
+        piece_numberOfpeers = {}
+        for i in range(self.number_of_pieces):
+            piece_numberOfpeers[i] = 0
+        for peer in connectedPeers:
+            if peer.bit_field:
+                for index, piece in enumerate(peer.bit_field):
+                    if peer.bit_field[index]:
+                        piece_numberOfpeers[index] += 1
+        piece_numberOfpeers = (sorted(piece_numberOfpeers.items(), key =
+             lambda kv:(kv[1], kv[0])))  
+        return piece_numberOfpeers
+        
