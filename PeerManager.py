@@ -26,18 +26,6 @@ class PeerManager:
             peer_obj = Peer(peer, self.number_of_pieces)
             p = threading.Thread(target=self.MultiThreadedConnection, args=(peer_obj, )) 
             p.start()
-
-            # sock = peer_obj.connect_to_peer()
-            # if sock:
-            #     handshake = Handshake(self.tracker_obj.torrent_obj.peer_id, self.tracker_obj.torrent_obj.info_hash)
-            #     sock.send(handshake.getHandshakeBytes())
-            #     try:
-            #         data = sock.recv(8192)
-            #         #check peer_id
-            #         print("Hand Shake received")
-            #         threading.Thread(target = self.MultiThreadedDownload, args = (peer_obj, sock, )).start()
-            #     except Exception as e:
-            #         print(f"HandShake Problem for {peer_obj.ip_port}")
     def read_continously_from_sock(self, sock, peer : Peer):
         print("HELLO")
         self.connected_peers.append(peer)
@@ -117,7 +105,6 @@ class PeerManager:
                     break
                 data += buff
                 required = length - len(data)
-                print(required)
                 if len(data) == length:
                     break
             except socket.error as e:
