@@ -10,17 +10,26 @@ import time
 import errno
 
 from urllib.parse import urlparse
-
+import threading
 class Tracker:
     def __init__(self, torrent_path):
         self.torrent_obj = Torrent(torrent_path) 
         self.peers = set()
+        self.tracker_threads = []
     def get_peer_list(self):
         for url in self.torrent_obj.announce_list:
+            t = None
             if "http" in url:
-                self.http_request(url)
+                t = threading.Thread(target=self.http_request, args = (url,))
+                # self.http_request(url)
             if "udp" in url:
-                self.udp_request(url)
+                t = threading.Thread(target=self.udp_request, args = (url,))
+            t.start()
+            self.tracker_threads.append(t)
+                # self.udp_request(url)
+    def exitAllThreads(self):
+        for thread in self.tracker_threads:
+            thread.join()
     def http_request(self, tracker_url):
         url_parse = urlparse(tracker_url)
         payload = {'info_hash': self.torrent_obj.info_hash, 
