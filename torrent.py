@@ -5,8 +5,9 @@ import hashlib
 import time
 
 class Torrent:
-    def __init__(self,torrent_path):
+    def __init__(self,torrent_path, file_path):
         self.torrent_path = torrent_path
+        self.file_path = file_path
         self.decode_bencoded_file()
         self.initialize_files()
         self.request_peers_parameters()
@@ -24,7 +25,7 @@ class Torrent:
         else:
             self.announce_list = [self.contents["announce"]]
         self.comment = self.contents["comment"]
-        self.creation_date = self.contents["created by"]
+        # self.creation_date = self.contents["created by"]
         #self.encoding = self.contents["encoding"]
         self.multipleFiles = False
         if "files" in self.contents["info"]:
@@ -40,12 +41,15 @@ class Torrent:
     #init files
     def initialize_files(self):
         total_length = 0
+        self.total_path = self.file_path
         if self.multipleFiles == True:
             root_folder_name = self.name
-            if not os.path.exists(root_folder_name):
-                os.mkdir(root_folder_name, 0o777)
+            self.total_path = os.path.join(self.file_path, root_folder_name)
+            print(self.total_path)
+            if not os.path.exists(self.total_path):
+                os.mkdir(self.total_path, 0o777)
             for file in self.files:
-                path_file = os.path.join(root_folder_name, *file["path"])
+                path_file = os.path.join(self.total_path, *file["path"])
 
                 if not os.path.exists(os.path.dirname(path_file)):
                     os.makedirs(os.path.dirname(path_file))

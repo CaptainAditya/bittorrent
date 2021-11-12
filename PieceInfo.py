@@ -5,6 +5,9 @@ import random
 import colorama
 from colorama import Fore, Back, Style
 import heapq as hq
+import time, shutil
+import hashlib
+import sys,os
 colorama.init(autoreset=True)#auto resets your settings after every output
 
 class PieceInfo:
@@ -50,6 +53,7 @@ class PieceInfo:
             piece : Piece = random.choice(self.pieces)
             if piece.is_complete() == False:
                 return piece
+        
     def _load_files(self):
         files = []
         piece_offset = 0
@@ -100,26 +104,30 @@ class PieceInfo:
                 piece_offset = self.files[master_i]['pieceOffset']
                 path = self.files[master_i]['path']
 
-                if self.pieces[piece_index].is_complete == False:
+                if self.pieces[piece_index].is_complete() == False:
                     continue
-                path_to_file = "//".join(path)
-                path_to_file = self.torrent.name + "//" + path_to_file
+                
+                path_to_file = os.path.join(self.torrent.total_path, "//".join(path))
+                # path_to_file = self.torrent.name + "//" + path_to_file
                 try:
                     f = open(path_to_file, 'r+b')  # Already existing file
                 except IOError:
                     f = open(path_to_file, 'wb')  # New file
-                data_to_be_written = self.merge_blocks(piece_index)[piece_offset : piece_offset + length]
-                f.seek(file_offset)
-                f.write(data_to_be_written)
+                if hashlib.sha1(self.merge_blocks(master_i)).digest() == self.pieces_SHA1[master_i]:
+                    data_to_be_written = self.merge_blocks(master_i)
+                    data_to_be_written = self.merge_blocks(piece_index)[piece_offset : piece_offset + length]
+                    f.seek(file_offset)
+                    f.write(data_to_be_written)
                 master_i += 1
         else:
             n = self.number_of_pieces
-            f = open(self.torrent.name, 'wb')  # New file
+            f = open(os.path.join(self.torrent.total_path, self.torrent.name), 'wb')  # New file
             while master_i < n:
-                if self.pieces[master_i].is_complete == False:
+                if self.pieces[master_i].is_complete() == False:
                     continue
-                data_to_be_written = self.merge_blocks(master_i)
-                f.write(data_to_be_written)
+                if hashlib.sha1(self.merge_blocks(master_i)).digest() == self.pieces_SHA1[master_i]:
+                    data_to_be_written = self.merge_blocks(master_i)
+                    f.write(data_to_be_written)
                 master_i += 1
 
     def getTotalBlocks(self):
@@ -127,14 +135,13 @@ class PieceInfo:
         for piece in self.pieces:
             total += len(piece.blocks)
         return total
-    def percentage(self):
+    def downloadBlocks(self):
         blocksDone = 0
         for piece in self.pieces:
             for block in piece.blocks:
                 if block.status == 1 : blocksDone += 1
-        percentage = (blocksDone/self.totalBlocks) * 100
-        inString = "PROGRESS REPORT : " + str(percentage) + "% Downloaded"
-        print (Back.GREEN + inString)
+        return blocksDone
+            
 
     def getRarestPieceMinHeap(self, connectedPeers):
         
@@ -150,3 +157,17 @@ class PieceInfo:
              lambda kv:(kv[1], kv[0])))  
         return piece_numberOfpeers
         
+    def printProgressBar (self, iteration, total, connectedPeers, prefix = 'Progress', suffix = 'Complete', decimals = 1, length = 100, fill = '█', autosize = True):
+        
+        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+        styling = '%s |%s| %s%% %s' % (prefix, fill, percent, suffix)
+        if autosize:
+            cols, _ = shutil.get_terminal_size(fallback = (length, 1))
+            length = cols - len(styling)
+        filledLength = int(length * iteration // total)
+        bar = fill * filledLength + '-' * (length - filledLength)
+        print('\r%s' % styling.replace(fill, bar), end = '\r')
+        # Print New Line on Complete
+
+        if iteration == total: 
+            print()
