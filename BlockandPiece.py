@@ -6,7 +6,6 @@ class Block:
         self.block_size = block_size
         self.data = raw_bytes
         self.status = 0
-        self.last_requested = None
 class Piece:
     def __init__(self, piece_index, piece_size, piece_sha1):
         self.piece_index = piece_index
@@ -33,3 +32,8 @@ class Piece:
     def get_empty_block(self):
         return random.choice(range(len(self.blocks)))
         
+    # def allBlocksRequested(self):
+    #     for block in self.blocks:
+    #         if block.last_requested == False:
+    #             return False
+    #     return True

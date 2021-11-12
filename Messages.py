@@ -7,8 +7,9 @@ class keep_alive:
     length = 0
     def __init__(self):
         return
-    def byteStringForKeepAlive(self):
-        return struct.pack('>I', self.length)
+    @classmethod
+    def byteStringForKeepAlive(cls):
+        return struct.pack('>I', cls.length)
     
 class chock:
     # choke: <len=0001><id=0>
@@ -117,21 +118,6 @@ class pieceMessage:
         else:
             return -1
 
-class ParseMessageFromPeer:
-    id = {
-        0 : chock,
-        1 : unchoke,
-        2 : interested,
-        3 : not_interested,
-        4 : have,
-        5 : Bitfield,
-        6 : request,
-        7 : pieceMessage
-    }
-    def __init__(self):
-        return
-    @classmethod
-    def parse_response(cls, response):
-        length, message_ID = struct.unpack(">IB", response[:5])
+
 
 
