@@ -2,7 +2,7 @@ import socket
 import struct
 from ipaddress import ip_address, IPv4Address
 import bitstring
-
+import time
 def RoundUp(x):
     return ((x + 7) & (-8))
 def validIPAddress(IP: str) -> str:
@@ -14,13 +14,16 @@ def validIPAddress(IP: str) -> str:
 class Peer:
     def __init__(self, ip_port, number_of_pieces):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)          
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  
+        self.sock.setblocking(0)        
         self.bit_field = bitstring.BitArray(RoundUp(number_of_pieces))
         self.ip_port = ip_port
         self.am_choking = 1
         self.am_interested = 0
         self.peer_choking = 1
         self.peer_interested = 0
+        self.last_transmission = None
+        self.rate = None
     def connect_to_peer(self):
         if validIPAddress(self.ip_port[0]) == "IPv6":
             self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
@@ -30,6 +33,7 @@ class Peer:
         try:
             self.sock.connect(self.ip_port)
             print("Success")
+            self.last_transmission = time.time()
             return self.sock
         except Exception as e:
             return None        
