@@ -116,7 +116,8 @@ class PeerManager:
         if len(data) <= 0:
             return None
         end = time.time()
-        rate = len(data) // ((end - start) * 1000)
+        kilobyte = len(data) // 125
+        rate = kilobyte // (end - start)
         return data, rate
         
     def MultiThreadedConnection(self, peer:Peer):
@@ -157,11 +158,20 @@ class PeerManager:
 
     def findRate(self):
         sum = 0
+        n = 0
         for peer in self.connected_peers:
             if peer.rate:
                 sum += peer.rate
+                n += 1
         try:
-            rate = sum // len(self.connected_peers)
+            rate = sum // n
             return rate
         except:
             return 0
+
+    def showRatePeers(self):
+        rates = []
+        for peer in self.connected_peers:
+            if peer.rate:
+                rates.append((peer, peer.rate))
+        return rates

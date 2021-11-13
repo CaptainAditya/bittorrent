@@ -19,6 +19,9 @@ class chock:
     def __init__(self) -> None:
         pass
     @classmethod
+    def to_bytes(self):
+        return pack(">IB", self.length, self.message_ID)
+    @classmethod
     def parse_response(self, response):
         length, message_ID = struct.unpack(">IB", response[:5])
         if length == self.length and message_ID == self.message_ID:

@@ -39,6 +39,8 @@ class Bittorrent:
                 
                 # piece = p.piece_manager.getRandomPiece()
                 piece:Piece = p.piece_manager.pieces[index]
+                if piece.is_complete():
+                    continue
                 peers:Peer = p.get_peer_having_piece(piece)
                 if not peers:                    
                     print("No Peers.. Connecting to peer again...")
@@ -47,8 +49,7 @@ class Bittorrent:
                 peer:Peer = random.choice(peers)
                 if peer.peer_choking == 1:
                     continue
-                for block_index, block in enumerate(piece.blocks):
-                       
+                for block_index, block in enumerate(piece.blocks): 
                     try:
                         request_block = p.request_blockByteString(piece, block_index, piece.blocks[block_index])
                         if time.time() - peer.last_transmission > 60:
@@ -65,11 +66,12 @@ class Bittorrent:
                         # print(f"REQUESTING BLOCK FROM {peer.ip_port} with PIECE INDEX : {piece.piece_index} and BLOCK INDEX : {block_index} from {peer.ip_port}")
                         piece.blocks[block_index].last_requested = time.time()
                     except Exception as e:
-                        p.connected_peers.remove(peer)
+                        if peer in p.connected_peers:
+                            p.connected_peers.remove(peer)
                         print(f"{e} for {peer.ip_port}")
                         time.sleep(1)
-                p.piece_manager.printProgressBar(p.piece_manager.downloadBlocks(), p.piece_manager.totalBlocks, p.connected_peers, "Progress", f"Rate {p.findRate()}")
-
+                p.piece_manager.printProgressBar(p.piece_manager.downloadBlocks(), p.piece_manager.totalBlocks, f"Kbps {p.findRate()}", f"Completed {p.piece_manager.piecesDownloaded()}/{len(p.piece_manager.pieces)}")
+                
         print("Torrent Complete")
         p.exitPeerThreads()
         file_thread.join()

@@ -12,8 +12,8 @@ import errno
 from urllib.parse import urlparse
 import threading
 class Tracker:
-    def __init__(self, torrent_path):
-        self.torrent_obj = Torrent(torrent_path) 
+    def __init__(self, torrent_path, file_path):
+        self.torrent_obj = Torrent(torrent_path, file_path) 
         self.peers = set()
         self.tracker_threads = []
     def get_peer_list(self):
@@ -36,7 +36,7 @@ class Tracker:
                     'peer_id': self.torrent_obj.peer_id, 
                     'uploaded': 0, 
                     'downloaded': 0, 
-                    'port': 6881, 
+                    'port': 6889, 
                     'left': self.torrent_obj.total_length, 
                     'event': 'started'}
         try:
@@ -46,15 +46,6 @@ class Tracker:
             self.peers[tracker_url] = []
             offset=0
             if type(response['peers']) != dict:
-                '''
-                    - Handles bytes form of list of peers
-                    - IP address in bytes form:
-                        - Size of each IP: 6 bytes
-                        - The first 4 bytes are for IP address
-                        - Next 2 bytes are for port number
-                    - To unpack initial 4 bytes !i (big-endian, 4 bytes) is used.
-                    - To unpack next 2 byets !H(big-endian, 2 bytes) is used.
-                '''
                 for _ in range(len(response['peers'])//6):
                     ip = struct.unpack_from("!i", response['peers'], offset)[0]
                     ip = socket.inet_ntoa(struct.pack("!i", ip))

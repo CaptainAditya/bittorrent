@@ -129,7 +129,12 @@ class PieceInfo:
                     data_to_be_written = self.merge_blocks(master_i)
                     f.write(data_to_be_written)
                 master_i += 1
-
+    
+    def piecesDownloaded(self):
+        done = 0
+        for piece in self.pieces:
+            if piece.is_complete(): done += 1
+        return done
     def getTotalBlocks(self):
         total = 0
         for piece in self.pieces:
@@ -157,7 +162,7 @@ class PieceInfo:
              lambda kv:(kv[1], kv[0])))  
         return piece_numberOfpeers
         
-    def printProgressBar (self, iteration, total, connectedPeers, prefix = 'Progress', suffix = 'Complete', decimals = 1, length = 100, fill = '█', autosize = True):
+    def printProgressBar (self, iteration, total, prefix = 'Progress', suffix = 'Complete', decimals = 1, length = 100, fill = '█', autosize = True):
         
         percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
         styling = '%s |%s| %s%% %s' % (prefix, fill, percent, suffix)
