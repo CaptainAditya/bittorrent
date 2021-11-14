@@ -10,6 +10,7 @@ from PieceInfo import PieceInfo
 import errno
 import socket
 import time
+MAX_CONNECTED_PEER = 8
 class PeerManager:
     def __init__(self, tracker_obj):
         self.tracker_obj = tracker_obj
@@ -27,8 +28,10 @@ class PeerManager:
             peer_obj = Peer(peer, self.number_of_pieces)
             p = threading.Thread(target=self.MultiThreadedConnection, args=(peer_obj, )) 
             p.start()
-    def read_continously_from_sock(self, sock, peer : Peer):     
-        self.connected_peers.append(peer)  
+    def read_continously_from_sock(self, sock, peer : Peer):  
+        if len(self.connected_peers) < MAX_CONNECTED_PEER:
+            self.connected_peers.append(peer)  
+        else: return
         try:
             while True:
                 length = sock.recv(4)
@@ -63,7 +66,7 @@ class PeerManager:
                     message_ID = sock.recv(1)
                     message_ID_u, = struct.unpack(">B", message_ID)
                     if message_ID_u == 5:
-                        raw_bytes, rate = PeerManager._read_piece_data(sock, length_u - 1, peer)
+                        raw_bytes = PeerManager._read_piece_data(sock, length_u - 1, peer)
                         bitField_obj = Bitfield.parse_response(length + message_ID + raw_bytes)
                         print(f"bitfield for peer with {peer.ip_port} has length {len(peer.bit_field)}")
                         print(f"bitfield object has {len(bitField_obj.bitfield)}")
@@ -76,8 +79,7 @@ class PeerManager:
 
                     elif message_ID_u == 7:
                         index_begin = sock.recv(8)
-                        raw_bytes, rate = PeerManager._read_piece_data(sock, length_u - 9, peer)
-                        peer.rate = rate
+                        raw_bytes = PeerManager._read_piece_data(sock, length_u - 9, peer)
                         piece_obj = pieceMessage.parse_response(length + message_ID + index_begin + raw_bytes)
                         piece_index, block_length, block_offset, block = piece_obj
                         block_index = block_offset // BLOCK_SIZE
@@ -93,11 +95,14 @@ class PeerManager:
     def _read_piece_data(sock, length, peer):
         data = b''
         required = length
-        start = time.time()
         
         while True:
             try:
+                start = time.time()
                 buff = sock.recv(required)
+                end = time.time()
+                peer.rate = len(buff) // 125
+                peer.rate = peer.rate // (end - start)
                 if len(buff) <= 0:
                     break
                 data += buff
@@ -115,10 +120,7 @@ class PeerManager:
                 break
         if len(data) <= 0:
             return None
-        end = time.time()
-        kilobyte = len(data) // 125
-        rate = kilobyte // (end - start)
-        return data, rate
+        return data
         
     def MultiThreadedConnection(self, peer:Peer):
         sock = peer.connect_to_peer()

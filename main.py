@@ -70,11 +70,13 @@ class Bittorrent:
                             p.connected_peers.remove(peer)
                         print(f"{e} for {peer.ip_port}")
                         time.sleep(1)
-                p.piece_manager.printProgressBar(p.piece_manager.downloadBlocks(), p.piece_manager.totalBlocks, f"Kbps {p.findRate()}", f"Completed {p.piece_manager.piecesDownloaded()}/{len(p.piece_manager.pieces)}")
+                p.piece_manager.printProgressBar(p.piece_manager.downloadBlocks(), p.piece_manager.totalBlocks, f"Kbps {p.findRate()} Peers {len(p.connected_peers)}", f"Completed {p.piece_manager.piecesDownloaded()}/{len(p.piece_manager.pieces)}")
                 
         print("Torrent Complete")
+        print(tracker.torrent_obj.total_length)
         p.exitPeerThreads()
         file_thread.join()
+
         
 torrent = sys.argv[1]
 path = sys.argv[2]

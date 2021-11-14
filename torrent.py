@@ -24,7 +24,7 @@ class Torrent:
             self.announce_list = [x[0] for x in self.contents["announce-list"]]
         else:
             self.announce_list = [self.contents["announce"]]
-        self.comment = self.contents["comment"]
+        # self.comment = self.contents["comment"]
         # self.creation_date = self.contents["created by"]
         #self.encoding = self.contents["encoding"]
         self.multipleFiles = False

@@ -114,7 +114,6 @@ class PieceInfo:
                 except IOError:
                     f = open(path_to_file, 'wb')  # New file
                 if hashlib.sha1(self.merge_blocks(master_i)).digest() == self.pieces_SHA1[master_i]:
-                    data_to_be_written = self.merge_blocks(master_i)
                     data_to_be_written = self.merge_blocks(piece_index)[piece_offset : piece_offset + length]
                     f.seek(file_offset)
                     f.write(data_to_be_written)
